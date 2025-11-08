@@ -1,0 +1,283 @@
+@model CalendarChanger.Controllers.WebEditor.SettingsViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Settings";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-gear me-2"></i>Settings</h2>
+    <a href="/EventModifier/Index" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div id="statusMsg" class="text-muted small mb-3"></div>
+
+<!-- ===== BASE URL ===== -->
+<section class="mb-5">
+    <h4 class="border-bottom pb-2 mb-1">
+        <i class="bi bi-link-45deg me-2"></i>Base URL
+    </h4>
+    <p class="text-muted small mb-3">
+        Defined the root address used for generating links inside of the calendar events.
+    </p>    <form id="baseUrlForm" class="d-flex gap-2 align-items-center">
+        <input type="text" id="baseUrlInput" class="form-control" placeholder="http://localhost:5220" value="@Model.BaseUrl" />
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</section>
+
+<!-- ===== CALENDAR ENDPOINTS ===== -->
+<section class="mb-5">
+    <h4 class="border-bottom pb-2 mb-1">
+        <i class="bi bi-diagram-3 me-2"></i>Calendar Endpoints
+    </h4>
+    <p class="text-muted small mb-3">
+        Configure named endpoints that filter events by type. Each endpoint can include one or more event categories.
+    </p>
+    
+    <div id="endpointStatus" class="text-muted small mb-2"></div>
+
+    <form id="addEndpointForm" class="d-flex gap-2 align-items-center mb-3">
+        <input id="endpointName" class="form-control" type="text" placeholder="Endpoint name (e.g. Lectures)" required />
+        <input id="endpointTypes" class="form-control" type="text" placeholder="Comma-separated types (e.g. Hoorcollege,Toets)" required />
+        <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Types</th>
+            <th style="width:10%">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var e in Model.CalendarEndpoints)
+        {
+            <tr data-id="@e.Id">
+                <td>@e.Name</td>
+                <td>
+                    <input class="form-control form-control-sm typeEdit"
+                           data-id="@e.Id"
+                           value="@string.Join(",", e.IncludeTypes)" />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger deleteEndpoint">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+        <tr>
+            <td><strong>Other</strong></td>
+            <td class="text-muted">Always available (excludes all known types)</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <button id="saveAllEndpoints" class="btn btn-primary mt-3">Save All Changes</button>
+
+</section>
+
+<!-- ===== ROOSTER URLS ===== -->
+<section>
+    <h4 class="border-bottom pb-2 mb-1">
+        <i class="bi bi-calendar3 me-2"></i>Rooster URLs
+    </h4>
+    <p class="text-muted small mb-3">
+        Add and manage your TimeEdit calendar feeds. Each must be a valid public .ics link.
+    </p>
+    
+    <form id="addRoosterForm" class="d-flex gap-2 align-items-center mb-3">
+        <input id="roosterUrl" type="url" class="form-control" placeholder="Enter Rooster URL..." required />
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+    @if (Model.RoosterUrls.Any())
+    {
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>URL</th>
+                <th style="width:15%">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.RoosterUrls)
+            {
+                <tr data-id="@r.Id">
+                    <td class="truncate-url" title="@r.Url">@r.Url</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger deleteRooster">Delete</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    
+</section>
+
+<!-- ===== RENAME RULES ===== -->
+<section class="mt-5">
+    <h4 class="border-bottom pb-2 mb-1">
+        <i class="bi bi-arrow-repeat me-2"></i>Rename Rules
+    </h4>
+    <p class="text-muted small mb-3">
+        Define regex-based renaming rules for event titles. When a summary matches <code>Match</code>, it is replaced with <code>Replace</code>.
+    </p>
+
+    <form id="addRuleForm" class="d-flex gap-2 align-items-center mb-3">
+        <input id="ruleMatch" type="text" class="form-control" placeholder="Match regex (e.g. ^INF)" required />
+        <input id="ruleReplace" type="text" class="form-control" placeholder="Replacement text" required />
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+@if (Model.RenameRules.Any())
+    {
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Match</th>
+                <th>Replace</th>
+                <th style="width:10%">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="ruleTableBody">
+            @foreach (var rule in Model.RenameRules)
+            {
+                <tr data-id="@rule.Id">
+                    <td class="text-monospace">@rule.Match</td>
+                    <td>@rule.Replace</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger deleteRule">Delete</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+@section Scripts {
+<script>
+const status = document.getElementById("statusMsg");
+
+// --- BASE URL ---
+document.getElementById("baseUrlForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const baseUrl = document.getElementById("baseUrlInput").value.trim();
+    if (!baseUrl) return;
+    status.textContent = "Saving base URL...";
+    const res = await fetch("/Settings/SaveBaseUrl", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `baseUrl=${encodeURIComponent(baseUrl)}`
+    });
+    status.textContent = res.ok ? "Base URL saved." : "Failed.";
+});
+
+// --- ENDPOINTS ---
+document.getElementById("addEndpointForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("endpointName").value.trim();
+    const types = document.getElementById("endpointTypes").value.trim();
+    if (!name || !types) return;
+    const res = await fetch("/EndpointModifier/Add", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `name=${encodeURIComponent(name)}&types=${encodeURIComponent(types)}`
+    });
+    if (res.ok) location.reload();
+});
+
+document.querySelectorAll(".editEndpoint").forEach(btn => {
+    btn.addEventListener("click", async e => {
+        const id = btn.dataset.id;
+        const field = document.querySelector(`.typeEdit[data-id='${id}']`);
+        const types = field.value.trim();
+        const res = await fetch(`/EndpointModifier/Edit/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `types=${encodeURIComponent(types)}`
+        });
+        status.textContent = res.ok ? "Endpoint updated." : "Error updating.";
+    });
+});
+
+document.querySelectorAll(".deleteEndpoint").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const tr = btn.closest("tr");
+        const id = tr.dataset.id;
+        if (!confirm("Delete this endpoint?")) return;
+        const res = await fetch(`/EndpointModifier/Delete/${id}`, { method: "POST" });
+        if (res.ok) tr.remove();
+    });
+});
+
+
+document.getElementById("saveAllEndpoints").addEventListener("click", async () => {
+    const rows = [...document.querySelectorAll(".typeEdit")];
+    const updates = rows.map(r => ({
+        id: r.dataset.id,
+        types: r.value.trim()
+    }));
+    const res = await fetch("/EndpointModifier/BulkEdit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+    });
+    status.textContent = res.ok ? "All endpoints saved." : "Error saving endpoints.";
+});
+
+
+// --- ROOSTER URLS ---
+document.getElementById("addRoosterForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const url = document.getElementById("roosterUrl").value.trim();
+    if (!url) return;
+    const res = await fetch("/RoosterModifier/Add", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `url=${encodeURIComponent(url)}`
+    });
+    if (res.ok) location.reload();
+});
+
+document.querySelectorAll(".deleteRooster").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const tr = btn.closest("tr");
+        const id = tr.dataset.id;
+        if (!confirm("Delete this URL?")) return;
+        const res = await fetch(`/RoosterModifier/Delete/${id}`, { method: "POST" });
+        if (res.ok) tr.remove();
+    });
+});
+
+// --- RENAME RULES ---
+document.getElementById("addRuleForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const match = document.getElementById("ruleMatch").value.trim();
+    const replace = document.getElementById("ruleReplace").value.trim();
+    if (!match || !replace) return;
+
+    const res = await fetch("/RenameRule/Add", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `match=${encodeURIComponent(match)}&replace=${encodeURIComponent(replace)}`
+    });
+    if (res.ok) location.reload();
+});
+
+document.querySelectorAll(".deleteRule").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const tr = btn.closest("tr");
+        const id = tr.dataset.id;
+        if (!confirm("Delete this rule?")) return;
+        const res = await fetch(`/RenameRule/Delete/${id}`, { method: "POST" });
+        if (res.ok) tr.remove();
+    });
+});
+
+</script>
+}

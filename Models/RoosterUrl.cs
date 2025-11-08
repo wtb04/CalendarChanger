@@ -1,0 +1,8 @@
+namespace CalendarChanger.Models
+{
+    public class RoosterUrl
+    {
+        public int Id { get; set; }
+        public string Url { get; set; } = string.Empty;
+    }
+}

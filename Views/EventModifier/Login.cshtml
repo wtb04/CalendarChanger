@@ -1,0 +1,23 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Login";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm p-4 text-center" style="max-width: 360px; width: 100%;">
+        <h3 class="mb-2 fw-semibold">CalendarChanger</h3>
+        <p class="text-muted mb-4">Sign in to continue</p>
+
+        <form method="post" action="/EventModifier/Login">
+            <input type="hidden" name="id" value="@ViewBag.Id" />
+
+            <div class="mb-3 text-start">
+                <label for="password" class="form-label">Password</label>
+                <input id="password" class="form-control" type="password" name="key"
+                       placeholder="Enter your password" required />
+            </div>
+
+            <button class="btn btn-primary w-100" type="submit">Continue</button>
+        </form>
+    </div>
+</div>

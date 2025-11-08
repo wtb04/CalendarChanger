@@ -1,0 +1,72 @@
+[
+  {
+    "buildingId": 1824,
+    "buildingName": "Waaier",
+    "shortNames": ["WA"]
+  },
+  {
+    "buildingId": 2617,
+    "buildingName": "Horst Complex",
+    "shortNames": ["HT", "HR", "NH", "OH", "ZH", "WH"]
+  },
+  {
+    "buildingId": 1194,
+    "buildingName": "Ravelijn",
+    "shortNames": ["RA"]
+  },
+  {
+    "buildingId": 2793,
+    "buildingName": "Technohal",
+    "shortNames": ["TL"]
+  },
+  {
+    "buildingId": 1823,
+    "buildingName": "Spiegel",
+    "shortNames": ["SP"]
+  },
+  {
+    "buildingId": 1821,
+    "buildingName": "Vrijhof",
+    "shortNames": ["VR"]
+  },
+  {
+    "buildingId": 1547,
+    "buildingName": "Zilverling",
+    "shortNames": ["ZI"]
+  },
+  {
+    "buildingId": 2330,
+    "buildingName": "Cubicus",
+    "shortNames": ["CU"]
+  },
+  {
+    "buildingId": 2325,
+    "buildingName": "Citadel",
+    "shortNames": ["CI"]
+  },
+  {
+    "buildingId": 2327,
+    "buildingName": "Carré",
+    "shortNames": ["CR", "HB"]
+  },
+  {
+    "buildingId": 2792,
+    "buildingName": "Sportcentrum",
+    "shortNames": ["SC", "Sportcentrum"]
+  },
+  {
+    "buildingId": 1018603,
+    "buildingName": "Therm",
+    "shortNames": ["Therm"]
+  },
+  {
+    "buildingId": 1006888,
+    "buildingName": "Langezijds",
+    "shortNames": ["LA"]
+  },
+  {
+    "buildingId": 1018604,
+    "buildingName": "Drienerburght",
+    "shortNames": ["DR"]
+  }
+]

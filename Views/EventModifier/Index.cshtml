@@ -1,0 +1,200 @@
+@model IEnumerable<CalendarChanger.Models.EventMeta>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "CalendarChanger";
+
+    var nowDate = DateOnly.FromDateTime(DateTime.Now);
+    var ordered = Model
+        .OrderBy(e => e.Date ?? DateOnly.MinValue)
+        .ThenBy(e => (e.CustomStart ?? e.OriginalStart) ?? TimeSpan.Zero)
+        .ToList();
+
+    var grouped = ordered.GroupBy(e => e.Date ?? DateOnly.MinValue).ToList();
+    var past = grouped.Where(g => g.Key < nowDate).ToList();
+    var upcoming = grouped.Where(g => g.Key >= nowDate).ToList();
+
+    string timeOrDash(TimeSpan? t) => t?.ToString(@"hh\:mm") ?? "—";
+}
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2 class="mb-0">
+        <i class="bi bi-calendar-event me-2"></i>CalendarChanger
+    </h2>
+    <a href="/Settings" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-gear"></i> Settings
+    </a>
+</div>
+
+<div id="refreshStatus" class="text-muted small mb-3"></div>
+
+<div>
+@foreach (var group in new[]
+{
+    ("Upcoming Events", upcoming, "refreshBtn", "bi-arrow-clockwise", "btn-secondary", "/EventModifier/Refresh", "Refreshing...", "Refreshed successfully."),
+    ("Past Events", past, "deletePastBtn", "bi-trash", "btn-danger", "/EventModifier/DeletePast", "Deleting past events...", "Past events deleted.")
+})
+{
+    if (group.Item2.Count == 0) { continue; }
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
+            <span>@group.Item1</span>
+            <button id="@group.Item3" class="btn btn-sm @group.Item5">
+                <i class="bi @group.Item4 me-1"></i>
+                @(group.Item1.StartsWith("Upcoming") ? "Refresh" : "Delete Past")
+            </button>
+        </div>
+        <div class="card-body p-0">
+            @foreach (var day in group.Item2)
+            {
+                <div class="bg-body-secondary fw-semibold py-2 ps-0 border-bottom border-top">
+                    <div class="px-3">@day.Key.ToLongDateString()</div>
+                </div>
+
+                <div class="table-responsive border-bottom">
+                    <table class="table table-sm table-hover align-middle mb-0" style="table-layout:fixed;width:100%;">
+                        <colgroup>
+                            <col style="width:39%;">
+                            <col style="width:13%;">
+                            <col style="width:13%;">
+                            <col style="width:15%;">
+                            <col style="width:20%;">
+                        </colgroup>
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in day)
+                            {
+                                var titleChanged = !string.IsNullOrEmpty(e.CustomTitle) && e.CustomTitle != e.OriginalTitle;
+                                var startChanged = e.CustomStart.HasValue && e.CustomStart != e.OriginalStart;
+                                var endChanged = e.CustomEnd.HasValue && e.CustomEnd != e.OriginalEnd;
+                                var hidden = e.Hidden;
+
+                                var title = e.CustomTitle ?? e.OriginalTitle ?? "(Untitled)";
+                                var start = e.CustomStart ?? e.OriginalStart;
+                                var end = e.CustomEnd ?? e.OriginalEnd;
+
+                                <tr class="clickable-row" data-id="@e.Id" style="cursor:pointer;">
+                                    <td class="text-truncate">
+                                        <strong class="@(titleChanged ? "text-primary" : "")">@title</strong><br />
+                                        <small class="text-muted">@e.Id[..Math.Min(15, e.Id.Length)]…</small>
+                                    </td>
+                                    <td>@Html.Raw(startChanged
+                                        ? $"<span class='text-primary fw-semibold'>{timeOrDash(start)}</span>"
+                                        : timeOrDash(start))</td>
+                                    <td>@Html.Raw(endChanged
+                                        ? $"<span class='text-primary fw-semibold'>{timeOrDash(end)}</span>"
+                                        : timeOrDash(end))</td>
+                                    <td>
+                                        <span class="badge @(hidden ? "bg-warning text-dark" : "bg-success")">
+                                            @(hidden ? "Hidden" : "Shown")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="post" action="/EventModifier/Delete/@e.Id" class="d-inline">
+                                            <button class="btn btn-danger btn-sm" type="submit"
+                                                    onclick="return confirm('Delete this override?');">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">
+        No modified or hidden events yet.
+    </div>
+}
+
+@section Scripts {
+<style>
+.btn {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.3rem;
+}
+.btn i {
+  vertical-align: middle;
+  font-size: 0.9em;
+}
+
+/* Medium screens */
+@@media (max-width: 992px) {
+  .btn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+  }
+  table.table th, table.table td {
+    font-size: 0.85rem;
+  }
+}
+
+/* Small screens */
+@@media (max-width: 576px) {
+  .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.55rem;
+  }
+  table.table th, table.table td {
+    font-size: 0.8rem;
+  }
+}
+</style>
+
+<script>
+async function handleAction(buttonId, url, startMsg, successMsg, confirmMsg = null) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+        if (confirmMsg && !confirm(confirmMsg)) return;
+        const status = document.getElementById("refreshStatus");
+        btn.disabled = true;
+        status.textContent = startMsg;
+        try {
+            const res = await fetch(url, { method: "POST" });
+            if (res.ok) {
+                status.textContent = successMsg;
+                location.reload();
+            } else {
+                status.textContent = "Failed (HTTP " + res.status + ")";
+            }
+        } catch (err) {
+            status.textContent = "Error: " + err.message;
+        } finally {
+            btn.disabled = false;
+        }
+    });
+}
+
+handleAction("refreshBtn", "/EventModifier/Refresh", "Refreshing...", "Refreshed successfully.");
+handleAction("deletePastBtn", "/EventModifier/DeletePast", "Deleting past events...", "Past events deleted.", "Delete all past events? This cannot be undone.");
+
+document.querySelectorAll(".clickable-row").forEach(row => {
+    row.addEventListener("click", e => {
+        if (!e.target.closest("button") && !e.target.closest("form")) {
+            const id = row.dataset.id;
+            window.location.href = `/EventModifier/Edit/${id}`;
+        }
+    });
+});
+</script>
+}

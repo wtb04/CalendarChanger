@@ -1,0 +1,124 @@
+@model CalendarChanger.Models.EventMeta
+@{
+Layout = "_Layout";
+ViewData["Title"] = "Edit Event";
+
+string fmt(TimeSpan? t) => t.HasValue ? t.Value.ToString("hh\\:mm") : "";
+bool needsRefresh = string.IsNullOrEmpty(Model?.OriginalTitle)
+|| !Model?.OriginalStart.HasValue == true
+|| !Model?.OriginalEnd.HasValue == true;
+
+bool titleChanged = !string.IsNullOrEmpty(Model?.CustomTitle) && Model.CustomTitle != Model.OriginalTitle;
+bool startChanged = Model?.CustomStart.HasValue == true && Model.CustomStart != Model.OriginalStart;
+bool endChanged   = Model?.CustomEnd.HasValue == true && Model.CustomEnd != Model.OriginalEnd;
+}
+
+<h2 class="mb-4"><i class="bi bi-pencil me-2"></i>Edit Event</h2>
+
+@if (Model == null)
+{
+<div class="alert alert-danger">Event not found.</div>
+}
+else
+{
+<form method="post" id="editForm">
+    <!-- Title -->
+    <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input id="CustomTitle" type="text" class="form-control" name="CustomTitle"
+               placeholder="@Model.OriginalTitle"
+               value="@Model.CustomTitle"
+               data-original="@Model.OriginalTitle" />
+        <div class="form-text text-muted @(titleChanged ? "" : "d-none")" id="titleOriginal">
+            Original: <span class="fw-semibold">@Model.OriginalTitle</span>
+        </div>
+    </div>
+
+    <!-- Start / End -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Start</label>
+            <input id="CustomStart" type="time" class="form-control" name="CustomStart"
+                   value="@(fmt(Model.CustomStart) != "" ? fmt(Model.CustomStart) : fmt(Model.OriginalStart))"
+                   data-original="@fmt(Model.OriginalStart)" />
+            <div class="form-text text-muted @(startChanged ? "" : "d-none")" id="startOriginal">
+                Original: <span class="fw-semibold">@fmt(Model.OriginalStart)</span>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">End</label>
+            <input id="CustomEnd" type="time" class="form-control" name="CustomEnd"
+                   value="@(fmt(Model.CustomEnd) != "" ? fmt(Model.CustomEnd) : fmt(Model.OriginalEnd))"
+                   data-original="@fmt(Model.OriginalEnd)" />
+            <div class="form-text text-muted @(endChanged ? "" : "d-none")" id="endOriginal">
+                Original: <span class="fw-semibold">@fmt(Model.OriginalEnd)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden toggle -->
+    <div class="form-check mb-4">
+        <input type="checkbox" class="form-check-input" name="Hidden" value="true" @(Model.Hidden ? "checked" : "") />
+        <label class="form-check-label">Hidden</label>
+    </div>
+
+    <!-- Buttons -->
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-secondary" href="/EventModifier/Index">Back</a>
+    </div>
+</form>
+
+<div id="refreshStatus" class="text-muted small mt-3"></div>
+}
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const needsRefresh = @((needsRefresh ? "true" : "false").ToLower());
+        const modelId = "@(Model?.Id ?? "")";
+        const allEmpty = !("@Model?.OriginalTitle") && !("@fmt(Model?.OriginalStart)") && !("@fmt(Model?.OriginalEnd)");
+        const status = document.getElementById("refreshStatus");
+
+        if ((needsRefresh || allEmpty) && modelId && !sessionStorage.getItem("eventRefreshed")) {
+            sessionStorage.setItem("eventRefreshed", "true");
+            status.textContent = "Creating event entry and refreshing...";
+            try {
+                const res = await fetch(`/EventModifier/EnsureAndRefresh/${modelId}`, { method: "POST" });
+                if (res.ok) {
+                    status.textContent = "Entry created and events refreshed. Reloading...";
+                    location.reload();
+                } else {
+                    status.textContent = `Refresh failed (HTTP ${res.status})`;
+                }
+            } catch (err) {
+                status.textContent = `Error: ${err.message}`;
+            }
+        }
+
+        const fields = [
+            { id: "CustomTitle", hint: "titleOriginal" },
+            { id: "CustomStart", hint: "startOriginal" },
+            { id: "CustomEnd",   hint: "endOriginal" }
+        ];
+
+        fields.forEach(({ id, hint }) => {
+            const input = document.getElementById(id);
+            const hintDiv = document.getElementById(hint);
+            if (!input || !hintDiv) return;
+            const original = (input.dataset.original || "").trim();
+
+            function update() {
+                const current = (input.value || "").trim();
+                const changed = current && current !== original;
+                hintDiv.classList.toggle("d-none", !changed);
+            }
+
+            input.addEventListener("input", update);
+            input.addEventListener("change", update);
+            update();
+        });
+    });
+</script>
+}
