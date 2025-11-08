@@ -2,8 +2,8 @@
 
 > A personal fix for the messy University of Twente (TimeEdit) calendar exports.
 
-| Before | After |
-|:--:|:--:|
+|                       Before                       |                      After                       |
+| :------------------------------------------------: | :----------------------------------------------: |
 | ![Before cleanup](docs/images/calendar-before.png) | ![After cleanup](docs/images/calendar-after.png) |
 
 CalendarChanger is a small web app that sits between **TimeEdit** and your preferred calendar app.  
@@ -36,7 +36,7 @@ Create a file named `docker-compose.yml`:
 ```yaml
 services:
     calendar-changer:
-        image: ghcr.io/wtb04/calendarchangerbackend:latest
+        image: ghcr.io/wtb04/calendarchanger:latest
         ports:
             - "8080:8080"
         environment:
