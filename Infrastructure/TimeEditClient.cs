@@ -16,7 +16,7 @@ namespace CalendarChanger.Infrastructure
 
         public async Task<Calendar> FetchCalendarAsync()
         {
-            var urls = await _db.RoosterUrls.Select(r => r.Url).ToListAsync();
+            var urls = await _db.RoosterUrls.Where(r => !r.Hidden).Select(r => r.Url).ToListAsync();
             if (urls.Count == 0)
                 throw new InvalidOperationException("No Rooster URLs defined.");
 

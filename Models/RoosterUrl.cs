@@ -1,9 +1,7 @@
-namespace CalendarChanger.Models
+public class RoosterUrl
 {
-    public class RoosterUrl
-    {
-        public int Id { get; set; }
-        public string Url { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    }
+    public int Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool Hidden { get; set; }
 }

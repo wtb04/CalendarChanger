@@ -22,7 +22,7 @@
         <i class="bi bi-calendar-event me-2"></i>CalendarChanger
     </h2>
     <a href="/Settings" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-gear"></i> Settings
+        <i class="bi bi-gear"></i>
     </a>
 </div>
 
@@ -41,8 +41,7 @@
         <div class="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
             <span>@group.Item1</span>
             <button id="@group.Item3" class="btn btn-sm @group.Item5">
-                <i class="bi @group.Item4 me-1"></i>
-                @(group.Item1.StartsWith("Upcoming") ? "Refresh" : "Delete Past")
+                <i class="bi @group.Item4"></i>
             </button>
         </div>
         <div class="card-body p-0">
@@ -53,61 +52,61 @@
                 </div>
 
                 <div class="table-responsive border-bottom">
-                    <table class="table table-sm table-hover align-middle mb-0" style="table-layout:fixed;width:100%;">
+                    <table class="table table-sm table-hover align-middle mb-0">
                         <colgroup>
-                            <col style="width:39%;">
-                            <col style="width:13%;">
-                            <col style="width:13%;">
-                            <col style="width:15%;">
-                            <col style="width:20%;">
+                            <col style="width:auto;">
+                            <col style="width:7%;">
+                            <col style="width:7%;">
+                            <col style="width:10%;">
+                            <col style="width:10%;">
                         </colgroup>
-                        <thead class="table-light">
-                            <tr>
-                                <th>Title</th>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
+                        <thead class="table-light text-center">
+                        <tr>
+                            <th class="text-start" >Title</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @foreach (var e in day)
-                            {
-                                var titleChanged = !string.IsNullOrEmpty(e.CustomTitle) && e.CustomTitle != e.OriginalTitle;
-                                var startChanged = e.CustomStart.HasValue && e.CustomStart != e.OriginalStart;
-                                var endChanged = e.CustomEnd.HasValue && e.CustomEnd != e.OriginalEnd;
-                                var hidden = e.Hidden;
+                        @foreach (var e in day)
+                        {
+                            var titleChanged = !string.IsNullOrEmpty(e.CustomTitle) && e.CustomTitle != e.OriginalTitle;
+                            var startChanged = e.CustomStart.HasValue && e.CustomStart != e.OriginalStart;
+                            var endChanged = e.CustomEnd.HasValue && e.CustomEnd != e.OriginalEnd;
+                            var hidden = e.Hidden;
 
-                                var title = e.CustomTitle ?? e.OriginalTitle ?? "(Untitled)";
-                                var start = e.CustomStart ?? e.OriginalStart;
-                                var end = e.CustomEnd ?? e.OriginalEnd;
+                            var title = e.CustomTitle ?? e.OriginalTitle ?? "(Untitled)";
+                            var start = e.CustomStart ?? e.OriginalStart;
+                            var end = e.CustomEnd ?? e.OriginalEnd;
 
-                                <tr class="clickable-row" data-id="@e.Id" style="cursor:pointer;">
-                                    <td class="text-truncate">
-                                        <strong class="@(titleChanged ? "text-primary" : "")">@title</strong><br />
-                                        <small class="text-muted">@e.Id[..Math.Min(15, e.Id.Length)]…</small>
-                                    </td>
-                                    <td>@Html.Raw(startChanged
+                            <tr class="clickable-row" data-id="@e.Id" style="cursor:pointer;">
+                                <td class="text-truncate text-start">
+                                    <strong class="@(titleChanged ? "text-primary" : "")">@title</strong><br/>
+                                    <small class="text-truncate">@e.Id</small>
+                                </td>
+                                <td class="text-center">@Html.Raw(startChanged
                                         ? $"<span class='text-primary fw-semibold'>{timeOrDash(start)}</span>"
                                         : timeOrDash(start))</td>
-                                    <td>@Html.Raw(endChanged
+                                <td class="text-center">@Html.Raw(endChanged
                                         ? $"<span class='text-primary fw-semibold'>{timeOrDash(end)}</span>"
                                         : timeOrDash(end))</td>
-                                    <td>
-                                        <span class="badge @(hidden ? "bg-warning text-dark" : "bg-success")">
-                                            @(hidden ? "Hidden" : "Shown")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <form method="post" action="/EventModifier/Delete/@e.Id" class="d-inline">
-                                            <button class="btn btn-danger btn-sm" type="submit"
-                                                    onclick="return confirm('Delete this override?');">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
+                                <td class="text-center">
+                                    <span class="badge @(hidden ? "bg-warning text-dark" : "bg-success")">
+                                        @(hidden ? "Hidden" : "Shown")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <form method="post" action="/EventModifier/Delete/@e.Id" class="d-inline">
+                                        <button class="btn btn-danger btn-sm" type="submit"
+                                                onclick="return confirm('Delete this override?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 </div>

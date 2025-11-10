@@ -4,3 +4,23 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.table-secondary td {
+    opacity: 0.6;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+table.table {
+    table-layout: fixed;
+    width: 100%;
+}
+table.table th, table.table td {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+table.table td.text-start {
+    white-space: normal;
+}

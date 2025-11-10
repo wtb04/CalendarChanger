@@ -45,7 +45,16 @@ namespace CalendarChanger.Controllers.WebEditor
             return Ok();
         }
 
+        [HttpPost("/RoosterModifier/ToggleHidden/{id:int}")]
+        public async Task<IActionResult> ToggleHidden(int id)
+        {
+            var r = await _db.RoosterUrls.FindAsync(id);
+            if (r == null) return NotFound();
 
+            r.Hidden = !r.Hidden;
+            await _db.SaveChangesAsync();
+            return Ok(new { hidden = r.Hidden });
+        }
 
         [HttpPost("/RoosterModifier/Delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
