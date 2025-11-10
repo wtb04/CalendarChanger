@@ -90,34 +90,41 @@
         Add and manage your TimeEdit calendar feeds. Each must be a valid public .ics link.
     </p>
     
-    <form id="addRoosterForm" class="d-flex gap-2 align-items-center mb-3">
+    <form id="addRoosterForm" class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <input id="roosterDescription" type="text" class="form-control" placeholder="Description (e.g. Module 7 Lectures)" required />
         <input id="roosterUrl" type="url" class="form-control" placeholder="Enter Rooster URL..." required />
         <button class="btn btn-primary" type="submit">Add</button>
     </form>
+
     @if (Model.RoosterUrls.Any())
     {
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
             <tr>
+                <th>Description</th>
                 <th>URL</th>
-                <th style="width:15%">Actions</th>
+                <th style="width:20%">Actions</th>
             </tr>
             </thead>
             <tbody>
             @foreach (var r in Model.RoosterUrls)
             {
                 <tr data-id="@r.Id">
+                    <td>@r.Description</td>
                     <td class="truncate-url" title="@r.Url">@r.Url</td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-outline-danger deleteRooster">Delete</button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary copyUrl" data-url="@r.Url">Copy</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger deleteRooster">Delete</button>
+                        </div>
                     </td>
                 </tr>
             }
             </tbody>
         </table>
     }
-    
 </section>
+
 
 <!-- ===== RENAME RULES ===== -->
 <section class="mt-5">
@@ -232,14 +239,16 @@ document.getElementById("saveAllEndpoints").addEventListener("click", async () =
 
 
 // --- ROOSTER URLS ---
+// --- ROOSTER URLS ---
 document.getElementById("addRoosterForm").addEventListener("submit", async e => {
     e.preventDefault();
     const url = document.getElementById("roosterUrl").value.trim();
-    if (!url) return;
+    const desc = document.getElementById("roosterDescription").value.trim();
+    if (!url || !desc) return;
     const res = await fetch("/RoosterModifier/Add", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `url=${encodeURIComponent(url)}`
+        body: `url=${encodeURIComponent(url)}&description=${encodeURIComponent(desc)}`
     });
     if (res.ok) location.reload();
 });
@@ -253,6 +262,15 @@ document.querySelectorAll(".deleteRooster").forEach(btn => {
         if (res.ok) tr.remove();
     });
 });
+
+document.querySelectorAll(".copyUrl").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(btn.dataset.url);
+        btn.textContent = "Copied";
+        setTimeout(() => (btn.textContent = "Copy"), 1500);
+    });
+});
+
 
 // --- RENAME RULES ---
 document.getElementById("addRuleForm").addEventListener("submit", async e => {

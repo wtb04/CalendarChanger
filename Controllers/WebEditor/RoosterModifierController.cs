@@ -16,7 +16,7 @@ namespace CalendarChanger.Controllers.WebEditor
         }
 
         [HttpPost("/RoosterModifier/Add")]
-        public async Task<IActionResult> Add(string url)
+        public async Task<IActionResult> Add(string url, string description)
         {
             if (string.IsNullOrWhiteSpace(url))
                 return BadRequest("URL required.");
@@ -36,10 +36,15 @@ namespace CalendarChanger.Controllers.WebEditor
                 return BadRequest("Invalid or unreachable URL.");
             }
 
-            _db.RoosterUrls.Add(new RoosterUrl { Url = url.Trim() });
+            _db.RoosterUrls.Add(new RoosterUrl
+            {
+                Url = url.Trim(),
+                Description = description?.Trim() ?? string.Empty
+            });
             await _db.SaveChangesAsync();
             return Ok();
         }
+
 
 
         [HttpPost("/RoosterModifier/Delete/{id:int}")]
